@@ -1,0 +1,2403 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Just Now — Improved Movie Ticket Booking</title>
+  <meta name="description" content="Improved UX for Online Movie Ticket Booking with guided steps, tooltips, and clearer visual cues."/>
+  <script type="module" src="/src/main.jsx"></script>
+  <style>
+    :root {
+      --bg-primary: #0a0e17;
+      --bg-secondary: #151922;
+      --bg-card: #1a1f2e;
+      --text-primary: #e8eaf0;
+      --text-secondary: #9aa4b2;
+      --accent: #6573ff;
+      --accent-hover: #7b87ff;
+      --border: rgba(255,255,255,0.1);
+      --success: #10b981;
+      --danger: #ef4444;
+      --warning: #f59e0b;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      margin: 0;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: linear-gradient(135deg, #0a0e17 0%, #151922 50%, #1a1f2e 100%);
+      color: var(--text-primary);
+      min-height: 100vh;
+      position: relative;
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: 
+        radial-gradient(circle at 20% 30%, rgba(101, 115, 255, 0.08) 0%, transparent 50%),
+        radial-gradient(circle at 80% 70%, rgba(101, 115, 255, 0.05) 0%, transparent 50%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .container {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 20px;
+      position: relative;
+      z-index: 1;
+    }
+
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 20px;
+      background: rgba(26, 31, 46, 0.6);
+      backdrop-filter: blur(10px);
+      border-bottom: 1px solid var(--border);
+      border-radius: 12px;
+      margin-bottom: 24px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 24px;
+      font-weight: 700;
+      color: var(--accent);
+    }
+
+    .logo {
+      width: 40px;
+      height: 40px;
+      background: linear-gradient(135deg, var(--accent), var(--accent-hover));
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+    }
+
+    .profile-section {
+      position: relative;
+    }
+
+    .profile-trigger {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      cursor: pointer;
+      padding: 8px 12px;
+      border-radius: 8px;
+      background: rgba(101, 115, 255, 0.1);
+      border: 1px solid var(--border);
+      transition: all 0.3s ease;
+      title: "View profile and logout";
+    }
+
+    .profile-trigger:hover {
+      background: rgba(101, 115, 255, 0.2);
+    }
+
+    .profile-avatar {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--accent), var(--accent-hover));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 600;
+      font-size: 16px;
+    }
+
+    .profile-dropdown {
+      position: absolute;
+      top: 100%;
+      right: 0;
+      margin-top: 10px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 16px;
+      min-width: 280px;
+      display: none;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+      z-index: 1000;
+    }
+    
+    .profile-dropdown.show {
+      display: block;
+    }
+    
+    .profile-dropdown-header {
+      padding: 0 0 16px; 
+      border-bottom: 1px solid var(--border); 
+      margin-bottom: 16px;
+    }
+
+    .profile-form {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .profile-form input {
+      padding: 10px 12px;
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--text-primary);
+      font-size: 14px;
+    }
+
+    .profile-form input::placeholder {
+      color: var(--text-secondary);
+    }
+
+    .btn {
+      padding: 10px 20px;
+      background: var(--accent);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 500;
+      transition: all 0.3s ease;
+      text-align: center;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    .btn:hover {
+      background: var(--accent-hover);
+      transform: translateY(-2px);
+    }
+
+    .btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .btn-secondary {
+      background: rgba(101, 115, 255, 0.15);
+      color: var(--accent);
+    }
+
+    .btn-secondary:hover {
+      background: rgba(101, 115, 255, 0.25);
+    }
+
+    .btn-danger {
+      background: var(--danger);
+    }
+
+    .btn-danger:hover {
+      background: #dc2626;
+    }
+
+    .btn-small {
+      padding: 6px 12px;
+      font-size: 12px;
+    }
+
+    .card {
+      background: rgba(26, 31, 46, 0.6);
+      backdrop-filter: blur(10px);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 20px;
+    }
+    
+    /* --- NEW: Booking Steps Guide --- */
+    .booking-steps {
+      display: flex;
+      justify-content: space-around;
+      align-items: center;
+      margin-bottom: 20px;
+      padding: 16px;
+      background: var(--bg-secondary);
+      border-radius: 12px;
+    }
+    .step {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      color: var(--text-secondary);
+      opacity: 0.5;
+      transition: all 0.3s ease;
+      flex: 1;
+      position: relative;
+    }
+    .step:not(:last-child)::after {
+      content: '';
+      position: absolute;
+      top: 20px;
+      right: -50%;
+      width: 100%;
+      height: 2px;
+      background: var(--border);
+      transform: translateX(-50%);
+    }
+    .step-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: var(--bg-card);
+      border: 2px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      margin-bottom: 8px;
+      transition: all 0.3s ease;
+      position: relative;
+      z-index: 1;
+    }
+    .step-label {
+      font-size: 12px;
+      font-weight: 500;
+      text-align: center;
+    }
+    .step.active {
+      opacity: 1;
+      color: var(--text-primary);
+    }
+    .step.active .step-icon {
+      border-color: var(--accent);
+      color: var(--accent);
+      box-shadow: 0 0 15px rgba(101, 115, 255, 0.3);
+    }
+    .step.completed .step-icon {
+      border-color: var(--success);
+      color: var(--success);
+      background: rgba(16, 185, 129, 0.1);
+    }
+    .step.completed:not(:last-child)::after {
+      background: var(--success);
+    }
+
+    .selection-panel {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+
+    .select-group label {
+      display: block;
+      margin-bottom: 8px;
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--text-secondary);
+    }
+
+    select, input {
+      width: 100%;
+      padding: 10px 12px;
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--text-primary);
+      font-size: 14px;
+    }
+
+    .movies-grid-container {
+      position: relative;
+    }
+    
+    /* --- NEW: Movie Grid Overlay --- */
+    .movie-grid-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(26, 31, 46, 0.9);
+      backdrop-filter: blur(5px);
+      z-index: 10;
+      border-radius: 12px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 20px;
+      transition: all 0.3s ease;
+      opacity: 1;
+      visibility: visible;
+    }
+    .movie-grid-overlay.hidden {
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+    }
+    .movie-grid-overlay-icon {
+      font-size: 48px;
+      margin-bottom: 16px;
+      line-height: 1;
+    }
+    .movie-grid-overlay p {
+      font-size: 16px;
+      font-weight: 500;
+      color: var(--text-primary);
+    }
+
+    .movies-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 20px;
+      margin-top: 24px;
+    }
+
+    .movie-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+      transition: all 0.3s ease;
+      cursor: pointer;
+    }
+
+    .movie-card:hover {
+      transform: translateY(-8px);
+      box-shadow: 0 12px 40px rgba(101, 115, 255, 0.2);
+    }
+
+    .movie-poster {
+      width: 100%;
+      height: 280px;
+      background-size: cover;
+      background-position: center;
+    }
+
+    .movie-info {
+      padding: 16px;
+    }
+
+    .movie-title {
+      font-size: 16px;
+      font-weight: 600;
+      margin-bottom: 8px;
+      color: var(--text-primary);
+    }
+
+    .movie-meta {
+      font-size: 12px;
+      color: var(--text-secondary);
+      margin-bottom: 12px;
+    }
+
+    .tabs {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 24px;
+      background: var(--bg-secondary);
+      padding: 4px;
+      border-radius: 10px;
+    }
+
+    .tab {
+      flex: 1;
+      padding: 10px 16px;
+      background: transparent;
+      border: none;
+      border-radius: 8px;
+      color: var(--text-secondary);
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 500;
+      transition: all 0.3s ease;
+    }
+
+    .tab.active {
+      background: var(--accent);
+      color: white;
+    }
+
+    .history-controls {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+    }
+
+    .booking-item {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 16px;
+      margin-bottom: 12px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      transition: all 0.3s ease;
+    }
+
+    .booking-item:hover {
+      border-color: var(--accent);
+    }
+
+    .booking-info {
+      flex: 1;
+    }
+
+    .booking-title {
+      font-size: 16px;
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+
+    .booking-details {
+      font-size: 13px;
+      color: var(--text-secondary);
+      line-height: 1.6;
+    }
+
+    .booking-actions {
+      display: flex;
+      gap: 8px;
+      flex-direction: column;
+      align-items: flex-end;
+    }
+
+    .booking-price {
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--success);
+      margin-bottom: 8px;
+    }
+
+    .booking-status {
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+    }
+
+    .status-active {
+      background: rgba(16, 185, 129, 0.2);
+      color: var(--success);
+    }
+
+    .status-cancelled {
+      background: rgba(239, 68, 68, 0.2);
+      color: var(--danger);
+    }
+
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0,0,0,0.8);
+      z-index: 2000;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      backdrop-filter: blur(5px);
+    }
+
+    .modal.show {
+      display: flex;
+    }
+
+    .modal-content {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      max-width: 900px;
+      width: 100%;
+      max-height: 90vh;
+      overflow-y: auto;
+      position: relative;
+    }
+
+    .modal-header {
+      padding: 24px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      transition: all 0.3s ease;
+    }
+    
+    .modal-header.modal-header-success { background-color: rgba(16, 185, 129, 0.2); }
+    .modal-header.modal-header-danger { background-color: rgba(239, 68, 68, 0.2); }
+    .modal-header.modal-header-warning { background-color: rgba(245, 158, 11, 0.2); }
+
+
+    .modal-body {
+      padding: 24px;
+    }
+    
+    .modal-footer {
+      padding: 20px 24px;
+      border-top: 1px solid var(--border);
+      display: flex;
+      justify-content: flex-end;
+      gap: 12px;
+      background: var(--bg-secondary);
+      border-bottom-left-radius: 16px;
+      border-bottom-right-radius: 16px;
+    }
+
+    .close-modal {
+      background: rgba(239, 68, 68, 0.2);
+      color: var(--danger);
+      border: none;
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      cursor: pointer;
+      font-size: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* --- NEW: Seat Legend --- */
+    .seat-legend {
+      display: flex;
+      justify-content: center;
+      gap: 20px;
+      margin-bottom: 16px;
+      font-size: 12px;
+      color: var(--text-secondary);
+    }
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .legend-box {
+      width: 20px;
+      height: 20px;
+      border-radius: 4px;
+    }
+    .legend-available {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+    }
+    .legend-selected {
+      background: var(--accent);
+      border: 1px solid var(--accent);
+    }
+    .legend-booked {
+      background: var(--bg-secondary);
+      border: 1px solid var(--danger);
+      opacity: 0.5;
+    }
+
+    .seat-grid {
+      display: grid;
+      grid-template-columns: repeat(14, 1fr);
+      gap: 8px;
+      margin: 20px 0;
+    }
+
+    .seat {
+      aspect-ratio: 1;
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 10px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .seat:hover:not(.booked) {
+      background: var(--accent);
+      color: white;
+      transform: scale(1.1);
+    }
+
+    .seat.selected {
+      background: var(--accent);
+      color: white;
+      border-color: var(--accent);
+    }
+
+    .seat.booked {
+      background: var(--bg-secondary);
+      border-color: var(--danger);
+      color: var(--danger);
+      cursor: not-allowed;
+      opacity: 0.5;
+    }
+    
+    /* --- NEW: Ticket Type Option Description --- */
+    .ticket-type-option-desc {
+      font-size: 0.9em;
+      color: var(--text-secondary);
+      opacity: 0.8;
+    }
+
+    .cast-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+      gap: 12px;
+      margin: 20px 0;
+    }
+
+    .cast-member {
+      text-align: center;
+    }
+
+    .cast-member img {
+      width: 100%;
+      height: 120px;
+      object-fit: cover;
+      border-radius: 8px;
+      margin-bottom: 8px;
+    }
+
+    .muted {
+      color: var(--text-secondary);
+      font-size: 14px;
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 60px 20px;
+      color: var(--text-secondary);
+    }
+    
+    /* Spinner */
+    .spinner-overlay {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0,0,0,0.7);
+      z-index: 9998;
+      align-items: center;
+      justify-content: center;
+    }
+    .spinner-overlay.show {
+      display: flex;
+    }
+    .spinner {
+      width: 50px;
+      height: 50px;
+      border: 5px solid var(--border);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    @media (max-width: 768px) {
+      .movies-grid {
+        grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+      }
+      
+      .seat-grid {
+        grid-template-columns: repeat(10, 1fr);
+        gap: 4px;
+      }
+      
+      .modal-content {
+         max-width: 95vw;
+      }
+      
+      #movieModal .modal-body > div:first-of-type {
+        grid-template-columns: 1fr;
+      }
+      #modalPoster {
+        height: 300px;
+      }
+      
+      .booking-item {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+      .booking-actions {
+        flex-direction: row;
+        width: 100%;
+        margin-top: 12px;
+        align-items: center;
+        justify-content: space-between;
+      }
+      
+      /* --- NEW: Responsive Booking Steps --- */
+      .booking-steps {
+        flex-direction: column;
+        gap: 16px;
+        align-items: flex-start;
+      }
+      .step {
+        flex-direction: row;
+        gap: 12px;
+        flex: none;
+        width: 100%;
+      }
+      .step:not(:last-child)::after {
+        top: 40px;
+        right: auto;
+        left: 20px;
+        width: 2px;
+        height: 100%;
+        transform: none;
+      }
+      .step-icon {
+        margin-bottom: 0;
+      }
+      .step-label {
+        text-align: left;
+        font-size: 14px;
+      }
+    }
+  </style>
+</head>
+<body>
+  
+  <div id="spinner" class="spinner-overlay">
+    <div class="spinner"></div>
+  </div>
+
+  <div id="loginPage" style="display: flex; align-items: center; justify-content: center; min-height: 100vh; padding: 20px;">
+    <div class="card" style="max-width: 400px; width: 100%; text-align: center;">
+      <div style="margin-bottom: 24px;">
+        <div class="logo" style="width: 60px; height: 60px; margin: 0 auto 16px; font-size: 32px;">🎬</div>
+        <h1 style="margin-bottom: 8px; color: var(--accent);">Just Now</h1>
+        <p class="muted">Your Movie Ticket Booking Partner</p>
+      </div>
+      
+      <form id="loginForm" style="margin-bottom: 16px; text-align: left;">
+        <div class="select-group" style="margin-bottom: 12px;">
+          <label for="loginEmail">Email Address</label>
+          <input type="email" id="loginEmail" placeholder="Email Address" required style="width: 100%;" aria-label="Email Address">
+        </div>
+        <div class="select-group" style="margin-bottom: 16px;">
+          <label for="loginPassword">Password</label>
+          <input type="password" id="loginPassword" placeholder="Password" required style="width: 100%;" aria-label="Password">
+        </div>
+        <button type="submit" class="btn" style="width: 100%;">Sign In</button>
+      </form>
+      
+      <div style="position: relative; margin: 20px 0;">
+        <div style="border-top: 1px solid var(--border);"></div>
+        <span style="position: absolute; top: -10px; left: 50%; transform: translateX(-50%); background: var(--bg-card); padding: 0 12px; color: var(--text-secondary); font-size: 12px;">OR</span>
+      </div>
+      
+      <button id="guestBtn" class="btn btn-secondary" style="width: 100%;">Continue as Guest</button>
+      
+      <p class="muted" style="font-size: 12px; margin-top: 24px; text-align: center;">
+        Don't have an account? <a href="#" id="showRegister" style="color: var(--accent); text-decoration: none; font-weight: 500;">Register Now</a>
+      </p>
+
+      <p class="muted" style="font-size: 12px; margin-top: 20px; text-align: center;">By continuing, you agree to our Terms & Privacy Policy</p>
+    </div>
+  </div>
+
+  <!-- NEW REGISTER PAGE -->
+  <div id="registerPage" style="display: none; align-items: center; justify-content: center; min-height: 100vh; padding: 20px;">
+    <div class="card" style="max-width: 400px; width: 100%; text-align: center;">
+      <div style="margin-bottom: 24px;">
+        <div class="logo" style="width: 60px; height: 60px; margin: 0 auto 16px; font-size: 32px;">🎬</div>
+        <h1 style="margin-bottom: 8px; color: var(--accent);">Create Account</h1>
+        <p class="muted">Join Just Now to book your tickets.</p>
+      </div>
+      
+      <form id="registerForm" style="margin-bottom: 16px; text-align: left;">
+        <div class="select-group" style="margin-bottom: 12px;">
+          <label for="registerName">Full Name</label>
+          <input type="text" id="registerName" placeholder="Your Full Name" required style="width: 100%;">
+        </div>
+        <div class="select-group" style="margin-bottom: 12px;">
+          <label for="registerEmail">Email Address</label>
+          <input type="email" id="registerEmail" placeholder="Email Address" required style="width: 100%;">
+        </div>
+        <div class="select-group" style="margin-bottom: 12px;">
+          <label for="registerPassword">Password</label>
+          <input type="password" id="registerPassword" placeholder="Create Password" required style="width: 100%;">
+        </div>
+        <div class="select-group" style="margin-bottom: 16px;">
+          <label for="registerConfirmPassword">Confirm Password</label>
+          <input type="password" id="registerConfirmPassword" placeholder="Confirm Password" required style="width: 100%;">
+        </div>
+        <button type="submit" class="btn" style="width: 100%;">Create Account</button>
+      </form>
+      
+      <p class="muted" style="font-size: 12px; margin-top: 24px;">
+        Already have an account? <a href="#" id="showLogin" style="color: var(--accent); text-decoration: none; font-weight: 500;">Sign In</a>
+      </p>
+      
+      <p class="muted" style="font-size: 12px; margin-top: 20px;">By registering, you agree to our Terms & Privacy Policy</p>
+    </div>
+  </div>
+  <!-- END NEW REGISTER PAGE -->
+
+  <div id="appPage" style="display: none;">
+    <header>
+      <div class="brand">
+        <div class="logo">🎬</div>
+        <span>Just Now</span>
+      </div>
+    <div class="profile-section">
+      <div class="profile-trigger" id="profileTrigger" title="View profile and logout" aria-label="Profile Menu">
+        <div class="profile-avatar" id="profileAvatar">U</div>
+        <span id="profileName">Profile</span>
+      </div>
+      <div class="profile-dropdown" id="profileDropdown">
+        <div class="profile-dropdown-header">
+          <h3 style="margin-bottom: 4px; font-size: 16px;" id="profileDropdownName">Profile</h3>
+          <p style="font-size: 12px; color: var(--text-secondary);" id="profileDropdownEmail">Your Email</p>
+        </div>
+        <!-- NEW: Start Tour Button 
+        <button type="button" class="btn btn-secondary" id="startTourBtn" style="width: 100%; margin-bottom: 12px;">
+           Start Guided Tour
+        </button>
+        -->
+        <button type="button" class="btn btn-danger" id="logoutBtn" style="margin-top: 12px; width: 100%;">Logout</button>
+      </div>
+    </div>
+  </header>
+
+  <div class="container">
+    <div class="tabs">
+      <button class="tab active" data-tab="movies" aria-label="Movies Tab">🎬 Movies</button>
+      <button class="tab" data-tab="history" aria-label="Booking History Tab">📋 Booking History</button>
+      <button class="tab" data-tab="profile" aria-label="Profile Tab">👤 Profile</button>
+    </div>
+
+    <div id="moviesTab" class="tab-content">
+      
+      <!-- NEW: Booking Steps Guide -->
+      <div class="booking-steps">
+        <div class="step active" id="step1">
+          <div class="step-icon">📍</div>
+          <div class="step-label">Select Location</div>
+        </div>
+        <div class="step" id="step2">
+          <div class="step-icon">🎭</div>
+          <div class="step-label">Select Theatre</div>
+        </div>
+        <div class="step" id="step3">
+          <div class="step-icon">🎟️</div>
+          <div class="step-label">Choose Movie</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2 style="margin-bottom: 16px;">Select Location & Theatre</h2>
+        <div class="selection-panel">
+          <div class="select-group">
+            <label for="locationSelect">📍 Location</label>
+            <select id="locationSelect" aria-label="Select Location">
+              option value="Mumbai">Mumbai</option>
+        <option value="Delhi">Delhi</option>
+        <option value="Bangalore">Bangalore</option>
+        <option value="Hyderabad">Hyderabad</option>
+        <option value="Chennai">Chennai</option>
+        <option value="Kolkata">Kolkata</option>
+        <option value="Pune">Pune</option>
+        <option value="Ahmedabad">Ahmedabad</option>
+        <option value="Jaipur">Jaipur</option>
+        <option value="Lucknow">Lucknow</option>
+        <option value="warangal">warangal</option>
+        <option value="karimnagar">karimnagar</option>
+            </select>
+          </div>
+          <div class="select-group">
+            <label for="theatreSelect">🎭 Theatre</label>
+            <select id="theatreSelect" disabled aria-label="Select Theatre">
+              <option value="">Select Theatre</option>
+            </select>
+          </div>
+          <div class="select-group">
+            <label for="searchInput">🔍 Search Movies</label>
+            <input type="text" id="searchInput" placeholder="Search by title, genre, cast..." title="Search by movie title, genre, or cast member name" aria-label="Search Movies">
+          </div>
+        </div>
+      </div>
+
+      <!-- UPDATED: Added overlay container -->
+      <div class="card movies-grid-container">
+        <!-- NEW: Movie Grid Overlay -->
+        <div id="movieGridOverlay" class="movie-grid-overlay">
+          <div class="movie-grid-overlay-icon">🍿</div>
+          <p>Please select a location and theatre to see available movies.</p>
+        </div>
+
+        <h2 style="margin-bottom: 16px;">Now Showing</h2>
+        <div class="movies-grid" id="moviesGrid"></div>
+        <div id="noResults" style="display: none;" class="empty-state">
+          <div>🔍</div>
+          <p>No movies found matching your search.</p>
+        </div>
+      </div>
+    </div>
+
+    <div id="historyTab" class="tab-content" style="display: none;">
+      <div class="card">
+        <h2 style="margin-bottom: 16px;">Your Booking History</h2>
+        <div class="history-controls">
+          <select id="sortHistory" aria-label="Sort History">
+            <option value="newest">Sort: Newest First</option>
+            <option value="oldest">Sort: Oldest First</option>
+          </select>
+          <select id="filterType" aria-label="Filter by Ticket Type">
+            <option value="all">All Ticket Types</option>
+            <option value="standard">Standard</option>
+            <option value="premium">Premium</option>
+            <option value="deluxe">Deluxe</option>
+          </select>
+          <select id="filterStatus" aria-label="Filter by Booking Status">
+            <option value="all">All Bookings</option>
+            <option value="active">Active</option>
+            <option value="cancelled">Cancelled</option>
+          </select>
+        </div>
+        <div id="historyList"></div>
+      </div>
+    </div>
+
+    <!-- NEW PROFILE TAB CONTENT -->
+    <div id="profileTab" class="tab-content" style="display: none;">
+      <div class="card" style="max-width: 600px; margin: 0 auto;">
+        <h2 style="margin-bottom: 20px;">Manage Your Profile</h2>
+        <p class="muted" style="margin-bottom: 24px;">Keep your information up to date to ensure a smooth booking experience.</p>
+        <form class="profile-form" id="profileForm">
+          <div class="select-group" style="margin-bottom: 16px;">
+            <label for="userName">Your Name</label>
+            <input type="text" id="userName" placeholder="Your Name" required aria-label="Your Name">
+          </div>
+          <div class="select-group" style="margin-bottom: 16px;">
+            <label for="userEmail">Email Address</label>
+            <input type="email" id="userEmail" placeholder="Email Address" required aria-label="Email Address">
+          </div>
+          <div class="select-group" style="margin-bottom: 16px;">
+            <label for="userPhone">Phone Number</label>
+            <input type="tel" id="userPhone" placeholder="Phone Number" required aria-label="Phone Number">
+          </div>
+          <button type="submit" class="btn" style="margin-top: 12px; width: 100%;">Save Changes</button>
+        </form>
+      </div>
+    </div>
+    <!-- END NEW PROFILE TAB CONTENT -->
+
+  </div>
+
+  <!-- Movie Details Modal -->
+  <div class="modal" id="movieModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 id="modalTitle">Movie Title</h2>
+        <button class="close-modal" id="closeModal" aria-label="Close Modal">×</button>
+      </div>
+      <div class="modal-body">
+        <div style="display: grid; grid-template-columns: 1fr 2fr; gap: 24px; margin-bottom: 24px;">
+          <div>
+            <div id="modalPoster" style="width: 100%; height: 400px; background-size: cover; background-position: center; border-radius: 12px;"></div>
+          </div>
+          <div>
+            <p id="modalGenre" class="muted" style="margin-bottom: 12px;"></p>
+            <p id="modalSynopsis" style="line-height: 1.6; margin-bottom: 20px;"></p>
+            <h3 style="margin-bottom: 12px;">Cast</h3>
+            <div class="cast-grid" id="modalCast"></div>
+          </div>
+        </div>
+
+        <h3 style="margin-bottom: 12px;">Select Showtime & Seats</h3>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 20px;">
+          <div class="select-group">
+            <label for="showtimeSelect">🕐 Showtime</label>
+            <select id="showtimeSelect" aria-label="Select Showtime"></select>
+          </div>
+          <div class="select-group">
+            <label for="ticketTypeSelect">🎟️ Ticket Type</label>
+            <!-- UPDATED: More descriptive options -->
+            <select id="ticketTypeSelect" aria-label="Select Ticket Type">
+              <option value="standard">Standard - ₹200 (Regular Seat)</option>
+              <option value="premium">Premium - ₹350 (Wider Seat, Better View)</option>
+              <option value="deluxe">Deluxe - ₹500 (Recliner, Includes Popcorn)</option>
+            </select>
+          </div>
+        </div>
+
+        <div style="text-align: center; margin-bottom: 12px; color: var(--text-secondary);">
+          🎥 SCREEN THIS WAY 🎥
+        </div>
+
+        <!-- NEW: Seat Legend -->
+        <div class="seat-legend">
+          <div class="legend-item">
+            <div class="legend-box legend-available"></div>
+            <span>Available</span>
+          </div>
+          <div class="legend-item">
+            <div class="legend-box legend-selected"></div>
+            <span>Selected</span>
+          </div>
+          <div class="legend-item">
+            <div class="legend-box legend-booked"></div>
+            <span>Booked</span>
+          </div>
+        </div>
+        
+        <div class="seat-grid" id="seatGrid"></div>
+        <p id="seatNote" class="muted" style="margin-top: 12px; text-align: center;"></p>
+
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 24px; padding-top: 24px; border-top: 1px solid var(--border);">
+          <div>
+            <div class="muted">Total Amount</div>
+            <div style="font-size: 24px; font-weight: 700; color: var(--success);" id="totalAmount">₹0</div>
+          </div>
+          <button class="btn" id="proceedPayment">Proceed to Payment</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Payment Modal -->
+  <div class="modal" id="paymentModal">
+    <div class="modal-content" style="max-width: 500px;">
+      <div class="modal-header">
+        <h2>Payment</h2>
+        <button class="close-modal" id="closePayment" aria-label="Close Payment Modal">×</button>
+      </div>
+      <div class="modal-body">
+        <div style="text-align: center; margin-bottom: 24px;">
+          <div class="muted">Amount to Pay</div>
+          <div style="font-size: 32px; font-weight: 700; color: var(--success);" id="payAmount">₹0</div>
+        </div>
+
+        <div class="select-group" style="margin-bottom: 16px;">
+          <label for="paymentMethod">Payment Method</label>
+          <select id="paymentMethod" aria-label="Select Payment Method">
+            <option value="">Select Method</option>
+            <option value="upi">UPI</option>
+            <option value="netbanking">Net Banking</option>
+            <option value="card">Credit/Debit Card</option>
+          </select>
+        </div>
+
+        <div id="upiForm" style="display: none; margin-bottom: 16px;">
+          <input type="text" id="upiId" placeholder="Enter UPI ID (e.g., user@paytm)" aria-label="UPI ID">
+        </div>
+
+        <div id="netbankingForm" style="display: none; margin-bottom: 16px;">
+          <select id="bankSelect" aria-label="Select Bank">
+            <option value="">Select Bank</option>
+            <option value="sbi">State Bank of India</option>
+            <option value="hdfc">HDFC Bank</option>
+            <option value="icici">ICICI Bank</option>
+            <option value="axis">Axis Bank</option>
+          </select>
+        </div>
+
+        <div id="cardForm" style="display: none; margin-bottom: 16px;">
+          <input type="text" placeholder="Card Number" style="margin-bottom: 8px;" aria-label="Card Number">
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+            <input type="text" placeholder="MM/YY" aria-label="Card Expiry Date">
+            <input type="text" placeholder="CVV" aria-label="Card CVV">
+          </div>
+        </div>
+
+        <div style="display: flex; gap: 12px;">
+          <button class="btn btn-secondary" id="cancelPayment" style="flex: 1;">Cancel</button>
+          <button class="btn" id="confirmPayment" style="flex: 1;">Confirm Payment</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- General Alert / Confirm Modal -->
+  <div class="modal" id="alertModal">
+    <div class="modal-content" style="max-width: 500px;">
+      <div class="modal-header" id="alertModalHeader">
+        <h2 id="alertTitle">Notification</h2>
+      </div>
+      <div class="modal-body">
+        <p id="alertMessage" style="line-height: 1.6; font-size: 16px;"></p>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" id="alertCancelBtn" style="display: none;">Cancel</button>
+        <button class="btn btn-danger" id="alertConfirmDangerBtn" style="display: none;">Confirm</button>
+        <button class="btn" id="alertConfirmBtn" style="display: none;">Confirm</button>
+        <button class="btn" id="alertOkBtn" style="display: none;">OK</button>
+      </div>
+    </div>
+  </div>
+ </div>
+   <script>
+    const MOVIES = [
+     {
+        id: 1,
+        title: "They Call Him OG",
+        genre: "Action, Crime, Drama, Thriller",
+        runtime: "2h 34m",
+        date: "2025-09-25",
+        poster: "https://encrypted-tbn1.gstatic.com/images?q=tbn:ANd9GcQnn0MX5OlNxTQ95WHlIgKgU3NDCb9yLZt9qx-NLkw2_j1JQYDqXAHzY6aKxm6ONdk5eCEzuR4NWTgMDtn5Rngf90DW24LLXkB9AONGu0p4WA",
+        synopsis: "After vanishing from Mumbai`s underworld for a decade, mob boss Ojas Gambheera resurfaces-feared, unstoppable, and with a single goal: to reclaim his empire and exact vengeance on the current tyrant, Omi Bhau. As loyalties fracture and alliances shift, OG reignites a brutal criminal war, confronting both external threats and haunting buried betrayals.",
+        shows: ["2025-10-01T10:30","2025-10-01T13:30","2025-10-01T19:00"],
+        cast: [
+          { name: "Pawan kalyan", img: "https://in.bmscdn.com/iedb/artist/images/website/poster/large/pawan-kalyan-26911-19-09-2017-02-46-38.jpg" },
+          { name: "Emraan Hashmi", img: "https://in.bmscdn.com/iedb/artist/images/website/poster/large/emraan-hashmi-651-13-09-2016-06-29-11.jpg" },
+          { name: "Arjun Das", img: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRdNIIXXRT4hXnPHRKXQgNBeJX688Y_8H_zFDE6vfXHWpOLnMGWqLO2cFg&s" },
+          { name: "Sriya Reddy", img: "https://in.bmscdn.com/iedb/artist/images/website/poster/large/sriya-reddy-2724-17-10-2018-12-56-21.jpg" },
+          { name: "Prakash Raj", img: "https://in.bmscdn.com/iedb/artist/images/website/poster/large/prakash-raj-1713-1752826706.jpg" },
+          { name: "Priyanka Arul Mohan", img: "https://in.bmscdn.com/iedb/artist/images/website/poster/large/priyanka-arul-mohan-1095858-30-10-2018-10-24-47.jpg" }
+        ]
+      },
+      {
+        id: 2,
+        title: "Mirai",
+        genre: "Action, Adventure, Fantasy, Thiller",
+        runtime: "2h 49m",
+        date: "2025-09-12",
+        poster: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcR_u9F9CgQI5-dY4LjH64fOzsXSdAuh8-wLdzIFYrkgcoR95bVTAyycY3E&s",
+        synopsis: "A street-smart young man discovers he is the only answer and the shield to stop a powerful force from reaching the nine sacred books of King Ashoka. Mirai is his journey of experiencing the power of Brahmand.",
+        shows: ["2025-10-01T11:00","2025-10-01T15:30","2025-10-01T20:30"],
+        cast: [
+          { name: "Teja Sajja", img: "https://in.bmscdn.com/iedb/artist/images/website/poster/large/teja-sajja-1269445-1704888435.jpg" },
+          { name: "Ritika Nayak", img: "https://in.bmscdn.com/iedb/artist/images/website/poster/large/ritika-nayak-2018677-1713431304.jpg" },
+          { name: "Manchu Manoj Kumar", img: "https://in.bmscdn.com/iedb/artist/images/website/poster/large/manchu-manoj-kumar-10182-24-03-2017-17-46-28.jpg" },
+          { name: "Shriya Saran", img: "https://in.bmscdn.com/iedb/artist/images/website/poster/large/shriya-saran-2156-18-09-2017-04-10-24.jpg" },
+          { name: "Jagapati Babu", img: "https://in.bmscdn.com/iedb/artist/images/website/poster/large/jagapati-babu-5809-1720595411.jpg" },  
+          { name: "Jayaram Subramaniam", img: "https://in.bmscdn.com/iedb/artist/images/website/poster/large/jayaram-subramaniam-2924-24-03-2017-18-02-25.jpg" }
+        ]
+      },
+      {
+        id: 3,
+        title: "Little Hearts",
+        genre: "Comedy, Romantic",
+        runtime: "2h 7m",
+        date: "2025-09-05",
+        poster: "https://images.filmibeat.com/webp/img/2025/09/littleheartsmain-1757326483.jpg",
+        synopsis: "Akhil`s failure in the EAMCET exam pushes him into the grind of long-term coaching, where academic pressure and personal heartbreak collide. Struggling to find meaning, he discovers the fine line between shallow attraction and true love. At the coaching centre, he meets Khatyayani, a girl who captures his heart instantly. But when she rejects him for a strange, unexpected reason, Akhil`s life takes a new turn. Refusing to let go, he embarks on a journey filled with humour, heart, and transformation, one that not only tests his resolve to win her over but also reshapes his understanding of love and life itself.",
+        shows: ["2025-10-01T09:30","2025-10-01T16:00","2025-10-01T21:30"],
+        cast: [
+          { name: "Mouli Tanuj", img: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTBDRnxFo2P2XyLf6mLd3dM7_O7EVFX63K_qjuq9RD_nDCX1xcv8Dp7b1I&s" },
+          { name: "Shivani Nagaram", img: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWaTbmJGUTsajRsPn_0_PyW7jm16pk96d1FxjWK1hx799_j55hxg-5Ioc&s" },
+          { name: "S.S. Kanchi", img: "https://filmyfocus.com/wp-content/uploads/2023/09/Profile-Pic-2023-09-02T150642.489.png" },
+          { name: "Anitha Chowdary", img: "https://filmyfocus.com/wp-content/uploads/2023/11/Profile-Pic-1-8.png" },
+          { name: "Satya Krishnan", img: "https://in.bmscdn.com/iedb/artist/images/website/poster/large/satya-krishnan-24089-24-03-2017-17-35-26.jpg" },
+          { name: "Nikil Abburi", img: "https://content.tupaki.com/en/feeds/2025/08/20/915500-nik.webp" },
+          { name: "Rajeev Kanakala", img: "https://assets.eenadu.net/article_img/0807Rajiv001.jpg" }
+        ]
+      },
+      {
+        id: 4,
+        title: "Kishkindhapuri",
+        genre: "Horror, Mystery, Thiller",
+        runtime: "2h 5m",
+        date: "2025-09-12",
+        poster: "https://assets-in.bmscdn.com/iedb/movies/images/mobile/thumbnail/xlarge/kishkindhapuri-et00457842-1757054623.jpg",
+        synopsis: "A ghost walking tour takes a chilling turn when a group of enthusiasts enters an abandoned radio station, unwittingly awakening a vengeful spirit that begins to hunt them down.",
+        shows: ["2025-10-01T09:30","2025-10-01T16:00","2025-10-01T21:30"],
+        cast: [
+          { name: "Bellamkonda Sai Srinivas", img: "https://in.bmscdn.com/iedb/artist/images/website/poster/large/bellamkonda-sai-srinivas-1046754-1679904147.jpg" },
+          { name: "Anupama Parameswaran", img: "https://in.bmscdn.com/iedb/artist/images/website/poster/large/anupama-parameswaran-1063607-1670497994.jpg" },
+          { name: "Tanikella Bharani", img: "https://in.bmscdn.com/iedb/artist/images/website/poster/large/tanikella-bharani-2328-19-09-2017-02-40-27.jpg" },
+          { name: "Hyper Aadi", img: "https://in.bmscdn.com/iedb/artist/images/website/poster/large/hyper-aadi-1085978-06-09-2017-01-32-06.jpg" },
+          { name: "Sudarshan", img: "https://in.bmscdn.com/iedb/artist/images/website/poster/large/sudarshan-28739-09-09-2020-05-41-26.jpg" },
+          { name: "Makarand Deshpande", img: "https://in.bmscdn.com/iedb/artist/images/website/poster/large/makarand-deshpande-1063244-1679979162.jpg" },
+          { name: "Srikanth Iyyengar", img: "https://media.themoviedb.org/t/p/w600_and_h900_bestv2/aWerpaujBKMU8r4qsgnQp9RoTtd.jpg" }
+        ]
+      },
+      {
+        id: 5,
+        title: "Idli Kottu",
+        genre: "Action, Drama, Family",
+        runtime: "2h 27m",
+        date: "2025-10-01",
+        poster: "https://m.sakshipost.com/sites/default/files/styles/cinema_main/public/article_images/2025/10/1/idlykottu11758380301-1759303408.jpg?itok=8VrVncI8",
+        synopsis: "A wealthy hotel owner is threatened by the success of a talented young idli vendor. After tasting the vendor`s unique idlis, the owner discovers the vendor is his long-lost son and the child of a former lover. As the owner decides to transfer his fortune to his newfound heir, themes of wealth, family, and identity collide, sparking a fierce conflict with his other son.",
+        shows: ["2025-10-01T09:30","2025-10-01T16:00","2025-10-01T21:30"],
+        cast: [
+          { name: "Dhanush", img: "https://in.bmscdn.com/iedb/artist/images/website/poster/large/dhanush-3988-18-09-2017-03-32-21.jpg" },
+          { name: "Nithya Menen", img: "https://in.bmscdn.com/iedb/artist/images/website/poster/large/nithya-menen-1052316-24-03-2017-13-47-46.jpg" },
+          { name: "Arun Vijay", img: "https://in.bmscdn.com/iedb/artist/images/website/poster/large/arun-vijay-3403-1735810993.jpg" },
+          { name: "Shalini Pandey", img: "https://in.bmscdn.com/iedb/artist/images/website/poster/large/shalini-pandey-1086417-27-09-2017-02-39-28.jpg" },
+          { name: "Sathyaraj", img: "https://in.bmscdn.com/iedb/artist/images/website/poster/large/sathyaraj-3835-23-08-2018-11-06-38.jpg" },
+          { name: "Rajkiran", img: "https://in.bmscdn.com/iedb/artist/images/website/poster/large/rajkiran-7177-24-03-2017-15-48-35.jpg" }
+        ]
+      },
+      {
+        id: 6,
+        title: "Kantara: A Legend Chapter-1",
+        genre: "Adventure, Drama, Thriller",
+        runtime: "2h 48m",
+        date: "2025-10-02",
+        poster: "https://assets-in.bmscdn.com/iedb/movies/images/mobile/thumbnail/xlarge/kantara-a-legend-chapter-1-et00377351-1759316771.jpg",
+        synopsis: "In pre-colonial Karnataka, during the Kadamba dynasty era, the ritual of Bhuta Kola takes root in the culture. Meanwhile, the seeds for the rise of Kaadubettu Shiva are also sown.",
+        shows: ["2025-10-01T09:30","2025-10-01T16:00","2025-10-01T21:30"],
+        cast: [
+          { name: "Rishab Shetty", img: "https://in.bmscdn.com/iedb/artist/images/website/poster/large/rishab-shetty-1064313-1724645842.jpg" },
+          { name: "Rukmini Vasanth", img: "https://in.bmscdn.com/iedb/artist/images/website/poster/large/rukmini-vasanth-1092753-15-05-2018-10-49-55.jpg" },
+          { name: "Gulshan Devaiah", img: "https://in.bmscdn.com/iedb/artist/images/website/poster/large/gulshan-devaiah-13831-20-12-2017-02-46-39.jpg" },
+          { name: "Jayaram Subramaniam", img: "https://in.bmscdn.com/iedb/artist/images/website/poster/large/jayaram-subramaniam-2924-24-03-2017-18-02-25.jpg" }
+        ]
+      },
+      {
+        id: 7,
+        title: "Madharaasi",
+        genre: "Action, Thriller",
+        runtime: "2h 36m",
+        date: "2025-09-05",
+        poster: "https://www.5movierulz.toys/uploads/Madharaasi-Telugu.jpg",
+        synopsis: "Virat, along with his friend Chirag, joins hands with a syndicate to bring gun culture to Tamil Nadu. The NIA, headed by Premnath, tries to stop them but falters in his attempt. During this time, he unexpectedly meets Raghu Ram, a man on the verge of suicide, and uses him in his mission.",
+        shows: ["2025-10-01T09:30","2025-10-01T16:00","2025-10-01T21:30"],
+        cast: [
+           { name: "Sivakarthikeyan", img: "https://www.wallsnapy.com/img_gallery/siva-karthikeyan-images-hd-download-6601988.jpg" },
+           { name: "Shabeer Kallarakkal", img: "https://www.behindwoods.com/tamil-actor/shabeer-kallarakkal/shabeer-kallarakkal-stills-photos-pictures-05.jpg" },
+           { name: "VIDYUT JAMMWAL", img: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSSPUKS2qqe0YAhWSL595k9xDmc5iktmXg_vSrWpZm3Sfmo13XtU3YFVO8&s" },
+           { name: "Rukmini Vasanth", img: "https://images.filmibeat.com/webp/img/popcorn/profile_photos/rukmini-vasanth-20230831175710-41438.jpg" },
+           { name: "Nanditha Sreekumar", img: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ2eJoI3Y055k3kyaIeLfTjiNx1Sjv4BXsqtxtGseRxDGkK-3l_xkIwi69TfMS3T4gExkQ&usqp=CAU" },
+           { name: "Aadukalam Naren", img: "https://in.bmscdn.com/iedb/artist/images/website/poster/large/aadukalam-naren-37428-1746180004.jpg" }
+      ]
+     },
+     {
+        id: 8,
+        title: "Checkmate",
+        genre: "Drama, Thriller",
+        runtime: "2h 5m",
+        date: "2025-08-09",
+        poster: "https://assets-in.bmscdn.com/iedb/movies/images/mobile/thumbnail/xlarge/checkmate-et00406061-1723029183.jpg",
+        synopsis: "Philip Kurian, the charismatic CEO of the pharma company AnnPhil Corp, finds himself embroiled in a corporate case for deaths related to drug trials by his company. Determined to escape the charges, he resorts to unusual methods.",
+        shows: ["2025-10-01T09:30","2025-10-01T16:00","2025-10-01T21:30"],
+        cast: [
+           { name: "Anoop Menon", img: "https://in.bmscdn.com/iedb/artist/images/website/poster/large/anoop-menon-8914-29-12-2021-03-14-57.jpg" },
+           { name: "Lal Paul Michael", img: "https://in.bmscdn.com/iedb/artist/images/website/poster/large/lal-1252-24-03-2017-12-54-14.jpg" },
+           { name: "Rekha Harindran", img: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSK0E2PhFseGUAfUAnLPXxGX2CSETe5GuE0hD58F7W41oS2Ofiai_Q3vm9SykBGa3dLSV4&usqp=CAU" },
+           { name: "Rajalekshmy C", img: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQX9lxqfEx-seIrE9o9uKRj73p5zG5xB6ERrw&s" },
+           { name: "Viswam Nair", img: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQThTt1Zz2h6XwyZhZS6SgMhNdEOz74dev-Gfn-7PfXzUQxe5ZAlKLUKO6ZgVlw2YWh2W4&usqp=CAU" }
+      ]
+     },
+     {
+        id: 9,
+        title: "Jolly LLB 3",
+        genre: "Drama, Comdey",
+        runtime: "2h 37m",
+        date: "2025-09-19",
+        poster: "https://assets-in.bmscdn.com/iedb/movies/images/mobile/thumbnail/xlarge/jolly-llb-3-et00450799-1756894236.jpg",
+        synopsis: "In this uproarious courtroom comedy, the smart-alec Jolly Mishra and the Jugadu Jolly Tyagi find themselves back in Judge Tripathi's court ensuing a rollercoaster ride of razor-sharp banter, outrageous legal maneuvers, and heartfelt moments as these lawyers try to outsmart, outplay, and outtalk each other. Packed with laugh-out-loud chaos, dramatic twists, and unexpected bursts of compassion, it's the ultimate legal showdown.",
+        shows: ["2025-10-01T09:30","2025-10-01T16:00","2025-10-01T21:30"],
+        cast: [
+           { name: "Akshay Kumar", img: "https://in.bmscdn.com/iedb/artist/images/website/poster/large/akshay-kumar-94-1681713982.jpg" },
+           { name: "Arshad Warsi", img: "https://in.bmscdn.com/iedb/artist/images/website/poster/large/arshad-warsi-228-14-09-2017-01-59-07.jpg" },
+           { name: "Saurabh Shukla", img: "http://in.bmscdn.com/iedb/artist/images/website/poster/large/saurabh-shukla-2063-24-03-2017-12-31-30.jpg" },
+           { name: "Amrita Rao", img: "https://in.bmscdn.com/iedb/artist/images/website/poster/large/amrita-rao-146-18-01-2019-12-43-22.jpg" },
+           { name: "Huma Qureshi", img: "https://in.bmscdn.com/iedb/artist/images/website/poster/large/huma-qureshi-30360-24-03-2017-13-58-06.jpg" }
+      ]
+     },
+     {
+        id: 10,
+        title: "Baaghi 4",
+        genre: "Action, Thiller",
+        runtime: "2h 37m",
+        date: "2025-09-05",
+        poster: "https://assets-in.bmscdn.com/iedb/movies/images/mobile/thumbnail/xlarge/baaghi-4-et00420244-1756971087.jpg",
+        synopsis: "A darker spirit, a bloodier mission. This time he is not the same!",
+        shows: ["2025-10-01T09:30","2025-10-01T16:00","2025-10-01T21:30"],
+        cast: [
+           { name: "Tiger Shroff", img: "https://in.bmscdn.com/iedb/artist/images/website/poster/large/tiger_shroff_37437_27-07-2016_11-49-08.jpg" },
+           { name: "Sanjay Dutt", img: "https://in.bmscdn.com/iedb/artist/images/website/poster/large/sanjay-dutt-2035-12-09-2017-05-07-10.jpg" },
+           { name: "Saurabh Shukla", img: "http://in.bmscdn.com/iedb/artist/images/website/poster/large/saurabh-shukla-2063-24-03-2017-12-31-30.jpg" },
+           { name: "Harnaaz Kaur Sandhu", img: "https://in.bmscdn.com/iedb/artist/images/website/poster/large/harnaaz-kaur-sandhu-2020992-1659341525.jpg" },
+           { name: "Sonam Bajwa", img: "https://in.bmscdn.com/iedb/artist/images/website/poster/large/sonam-bajwa-40182-13-06-2019-02-40-40.jpg" }
+      ]
+     },
+     {
+        id: 11,
+        title: "Sunny Sanskari Ki Tulsi Kumari",
+        genre: "Romantic, Comdey",
+        runtime: "2h 16m",
+        date: "2025-10-02",
+        poster: "http://assets-in.bmscdn.com/iedb/movies/images/mobile/thumbnail/xlarge/sunny-sanskari-ki-tulsi-kumari-et00388406-1759906451.jpg",
+        synopsis: "Set against the backdrop of Delhi, the film is based on a humorously convoluted premise of two ex lovers trying to win their love back. Amidst an extravagantly dramatic tale of innocent deception and comical misunderstandings - an accidental love story blossoms. Who would get their happy ending in the middle of the hilarious chaos?",
+        shows: ["2025-10-01T09:30","2025-10-01T16:00","2025-10-01T21:30"],
+        cast: [
+           { name: "Varun Dhawan", img: "https://in.bmscdn.com/iedb/artist/images/website/poster/large/varun-dhawan-21064-12-09-2017-02-22-38.jpg" },
+           { name: "Janhvi Kapoor", img: "https://in.bmscdn.com/iedb/artist/images/website/poster/large/janhvi-kapoor-1087603-1758700808.jpg" },
+           { name: "Rohit Saraf", img: "https://in.bmscdn.com/iedb/artist/images/website/poster/large/rohit-saraf-2002253-1717241599.jpg" }
+      ]
+     },
+     {
+        id: 12,
+        title: "Dashavatar",
+        genre: "Drama, Adventure, Thiller",
+        runtime: "2h 35m",
+        date: "2025-09-12",
+        poster: "https://assets-in.bmscdn.com/iedb/movies/images/mobile/thumbnail/xlarge/dashavatar-et00455185-1753336677.jpg",
+        synopsis: "Mahavatar Narasimha story tells the story of Lord Vishnu’s Narasimha Avatar. This is fourth in the Dashavatars of Lord Vishnu. In Satya Yuga, Maharshi Kashyap’s wife Diti’s insistence on intercourse results in the sensational developments resulting in the birth of two demons Hiranyaksha and Hiranyakashipu. Where this leads to and how their birth impacts the entire universe and what forced Lord Vishnu to incarnate into Lord Varaha and Lord Narasimha, what role Hiranyakashipu’s son Prahlada played from the rest of the narration.",
+        shows: ["2025-10-01T09:30","2025-10-01T16:00","2025-10-01T21:30"],
+        cast: [
+           { name: "Dilip Prabhavalkar", img: "https://in.bmscdn.com/iedb/artist/images/website/poster/large/dilip-prabhavalkar-594-24-03-2017-13-54-41.jpg" },
+           { name: "Mahesh Manjrekar", img: "https://in.bmscdn.com/iedb/artist/images/website/poster/large/mahesh-manjrekar-1327-1743860900.jpg" },
+           { name: "Siddharth Menon", img: "https://in.bmscdn.com/iedb/artist/images/website/poster/large/siddharth-menon-11571-1753179464.jpg" },
+           { name: "Bharat Jadhav", img: "https://in.bmscdn.com/iedb/artist/images/website/poster/large/bharat-jadhav-309-1679386116.jpg" },
+           { name: "Abhinay Berde", img: "https://in.bmscdn.com/iedb/artist/images/website/poster/large/abhinay-berde-1076998-1712982538.jpg" },
+           { name: "Ravi Kale", img: "https://in.bmscdn.com/iedb/artist/images/website/poster/large/ravi-kale-1845-14-09-2016-12-30-50.jpg" },
+           { name: "Sunil Tawde", img: "https://in.bmscdn.com/iedb/artist/images/website/poster/large/sunil-tawde-1045391-31-03-2017-12-58-07.jpg" }
+         ]
+      },
+     {
+        id: 13,
+        title: "Constable",
+        genre: "Crime, Thiller",
+        runtime: "2h 10m",
+        date: "2025-08-14",
+        poster: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQV-AMGizt01Xc-cY_TA-WZu1KTbusPELGoYp_fOq2-Dc5Mwou5HrYwfhg&s",
+        synopsis: "Constable Kashi lives a quiet life, treating his sister-in-law like family and settling into his new posting in Mokila. He forms a strong bond with fellow constable Bhadram, unaware of the horrors awaiting them. When a series of brutal murders rocks the village, Kashi must rise to the challenge. With his sharp instincts and secret admirer Mahati by his side, he dives into a chilling investigation that pushes him to his limits.",
+        shows: ["2025-10-01T09:30","2025-10-01T16:00","2025-10-01T21:30"],
+        cast: [
+           { name: "Varun Sandesh", img: "https://in.bmscdn.com/iedb/artist/images/website/poster/large/varun-sandesh-8026-1757068005.jpg" },
+           { name: "Ravi Varma", img: "https://in.bmscdn.com/iedb/artist/images/website/poster/large/ravi-varma-16479-21-11-2017-10-08-44.jpg" },
+           { name: "Duvvasi Mohan", img: "https://in.bmscdn.com/iedb/artist/images/website/poster/large/duvvasi-mohan-2855-24-03-2017-14-59-12.jpg" },
+           { name: "Madhulika Varanasi", img: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRtFBWHidAKQAGXsJV28uD29k1kvu895xe8og&s" },
+           { name: "Kalpalatha", img: "https://www.imdb.com/name/nm8971057/mediaviewer/rm2268051969/?ref_=nm_ov_ph" },
+           { name: "Surya Kumar Bhagvandas", img: "https://filmyfocus.com/wp-content/uploads/2023/08/surya1.png" }
+
+         ]
+      },
+      {
+        id: 14,
+        title: "Tron: Ares",
+        genre: "Drama, Adventure, Sci-Fi",
+        runtime: "1h 51m",
+        date: "2025-10-10",
+        poster: "https://assets-in.bmscdn.com/iedb/movies/images/mobile/thumbnail/xlarge/tron-ares-et00440957-1757057063.jpg",
+        synopsis: "Two tech giants are racing to integrate AI and technology into the real world. While Eve Kim wants to use it to help mankind, Julian Dillinger intends to create weapons. As their digital creations can only last for 29 minutes in the real world, they hunt for the solution, the Permanence Code. Dillinger sends an advanced program, Ares (Jared Leto), into the real world to retrieve the code, but the super-intelligent and self-aware Ares questions its programming.",
+        shows: ["2025-10-01T09:30","2025-10-01T16:00","2025-10-01T21:30"],
+        cast: [
+           { name: "Jared Leto", img: "https://in.bmscdn.com/iedb/artist/images/website/poster/large/jared-leto-3943-24-03-2017-17-30-08.jpg" },
+           { name: "Greta Lee", img: "https://in.bmscdn.com/iedb/artist/images/website/poster/large/greta-lee-1063316-24-03-2017-16-22-53.jpg" },
+           { name: "Evan Peters", img: "https://in.bmscdn.com/iedb/artist/images/website/poster/large/evan-peters-1050913-04-11-2020-03-54-08.jpg" },
+           { name: "Jodie Turner-Smith", img: "https://in.bmscdn.com/iedb/artist/images/website/poster/large/jodie-turner-smith-2013050-27-04-2021-05-09-57.jpg" },
+           { name: "Jeff Bridges", img: "https://in.bmscdn.com/iedb/artist/images/website/poster/large/jeff-bridges-962-24-03-2017-12-37-32.jpg" },
+           { name: "Gillian Anderson", img: "https://in.bmscdn.com/iedb/artist/images/website/poster/large/gillian-anderson-747-07-08-2017-00-24-21.jpg" }
+         ]
+      },
+      {
+        id: 15,
+        title: "Dude",
+        genre: "Action, Comedy, Romantic",
+        runtime: "2h 19m",
+        date: "2025-10-17",
+        poster: "https://assets-in.bmscdn.com/iedb/movies/images/mobile/thumbnail/xlarge/dude-et00445596-1759640703.jpg",
+        synopsis: "Agan and Kural have been a part of each other's lives for as long as they can remember, sharing countless moments that have shaped who they are. As they step into a new phase of life, unforeseen challenges test their understanding of themselves and the world around them, leading them on a journey of growth, choices, and change.",
+        shows: ["2025-10-01T09:30","2025-10-01T16:00","2025-10-01T21:30"],
+        cast: [
+           { name: "Pradeep Ranganathan", img: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTOqAOiFLmnYG4nequ84nAgFyDlDFabx_08IIZOe-xXRExU_jqp1mp0SHJ1bbGmnxNFZp6NrA" },
+           { name: "Sarath Kumar", img: "https://upload.wikimedia.org/wikipedia/commons/e/ee/R_Sarathkumar_at_Tamil_Film_Industry_Hunger_Strike_%28cropped%29.jpg" },
+           { name: "Mamitha Baiju", img: "https://filmyfocus.com/wp-content/uploads/2024/02/Copy-of-Profile-7-1.png" },
+           { name: "Hridhu Haroon", img: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSFhnVoF1sXMV3WvUkbRkR4ETnQjJNMmLJJWQqLSXaaahWOlL0&s" },
+           { name: "Rohini Molleti", img: "https://upload.wikimedia.org/wikipedia/commons/thumb/4/48/Rohini_%28actress%29.jpg/375px-Rohini_%28actress%29.jpg" }
+         ]
+      },
+      {
+        id: 16,
+        title: "K-Ramp",
+        genre: "Action, Romantic",
+        runtime: "2h 20m",
+        date: "2025-10-18",
+        poster: "https://media.cinemaexpress.com/cinemaexpress%2F2025-06-30%2Fgwp4m3ta%2FK-Ramp-still.jpg?w=480&auto=format%2Ccompress",
+        synopsis: "K-Ramp is a Telugu movie directed by Jains Nani. The movie features Kiran Abbavaram and Yukti Thareja in the lead roles.",
+        shows: ["2025-10-01T09:30","2025-10-01T16:00","2025-10-01T21:30"],
+        cast: [
+           { name: "Kiran Abbavaram", img: "https://in.bmscdn.com/iedb/artist/images/website/poster/large/kiran-abbavaram-1267796-1662543648.jpg" },
+           { name: "Yukti Thareja", img: "https://filmyfocus.com/wp-content/uploads/2023/08/Copy-of-Profile-2023-08-13T183819.392.png" },
+           { name: "Saikumar Pudipeddi", img: "https://in.bmscdn.com/iedb/artist/images/website/poster/large/saikumar-pudipeddi-1979-24-03-2017-15-43-47.jpg" },
+           { name: "Ali Basha", img: "https://in.bmscdn.com/iedb/artist/images/website/poster/large/ali-basha-1053378-11-10-2019-05-49-24.jpg" },
+           { name: "Kamna Jethmalani", img: "https://in.bmscdn.com/iedb/artist/images/website/poster/large/kamna-jethmalani-1140-24-03-2017-13-01-45.jpg" },
+           { name: "Vennela Kishore", img: "https://in.bmscdn.com/iedb/artist/images/website/poster/large/vennela-kishore-16481-1659598641.jpg" },
+           { name: "Vijaya Krishna Naresh", img: "https://cdn.telugu360.com/wp-content/uploads/2015/10/Senior-Naresh.jpg" }
+         ]
+      },
+      {
+        id: 17,
+        title: "Telusu Kadha",
+        genre: "Drama, Romantic",
+        runtime: "2h 16m",
+        date: "2025-10-17",
+        poster: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSrI1QZ4lZumk3bwggse6NjvG4JDQbDB-wp-g&s",
+        synopsis: "Two tech giants are racing to integrate AI and technology into the real world. While Eve Kim wants to use it to help mankind, Julian Dillinger intends to create weapons. As their digital creations can only last for 29 minutes in the real world, they hunt for the solution, the Permanence Code. Dillinger sends an advanced program, Ares (Jared Leto), into the real world to retrieve the code, but the super-intelligent and self-aware Ares questions its programming.",
+        shows: ["2025-10-01T09:30","2025-10-01T16:00","2025-10-01T21:30"],
+        cast: [
+           { name: "Siddhu Jonnalagadda", img: "https://images.filmibeat.com/webp/192x258/img/popcorn/profile_photos/siddhujonnalagadda-20240418070934-24302.jpg" },
+           { name: "Raashi Khanna", img: "https://in.bmscdn.com/iedb/artist/images/website/poster/large/raashi-khanna-35421-1656056374.jpg" },
+           { name: "Srinidhi Shetty", img: "https://in.bmscdn.com/iedb/artist/images/website/poster/large/sreenidhi-22732-19-02-2018-09-47-37.jpg" }
+         ]
+      },
+      {
+        id: 18,
+        title: "Thamma",
+        genre: "Horror, Comedy, Romantic",
+        runtime: "2h 30m",
+        date: "2025-10-21",
+        poster: "https://media.assettype.com/freepressjournal/2025-10-20/l5rd6y9q/Thamma-first-review.jpg",
+        synopsis: "Dinesh Vijan`s Maddock Horror comedy universe needed a love story. Unfortunately, it`s a bloody one.",
+        shows: ["2025-10-01T09:30","2025-10-01T16:00","2025-10-01T21:30"],
+        cast: [
+           { name: "Ayushmann Khurrana", img: "https://in.bmscdn.com/iedb/artist/images/website/poster/large/ayushmann-khurrana-29002-05-09-2019-06-04-30.jpg" },
+           { name: "Rashmika Mandanna", img: "https://in.bmscdn.com/iedb/artist/images/website/poster/large/rashmika-mandanna-1076783-28-12-2016-12-20-39.jpg" },
+           { name: "Paresh Rawal", img: "https://in.bmscdn.com/iedb/artist/images/website/poster/large/paresh-rawal-1644-13-09-2017-03-44-45.jpg" },
+           { name: "Nawazuddin Siddiqui", img: "https://in.bmscdn.com/iedb/artist/images/website/poster/large/nawazuddin_siddiqui_17110_26-07-2016_05-42-25.jpg" },
+           { name: "Faisal Malik", img: "https://www.hindustantimes.com/ht-img/img/2024/02/25/550x309/Faisal20240114_141936_1708840959214_1708840983566.jpg" }
+         ]
+      },
+      {
+        id: 19,
+        title: "Ek Deewane Ki Deewaniyat",
+        genre: "Drama, Thiller, Romantic",
+        runtime: "2h 20m",
+        date: "2025-10-21",
+        poster: "https://assets-in.bmscdn.com/iedb/movies/images/mobile/thumbnail/xlarge/ek-deewane-ki-deewaniyat-et00447585-1756106577.jpg",
+        synopsis: "A powerful politician's unrequited love for a superstar actress escalates into a dangerous and destructive obsession. The story, directed by Milap Milan Zaveri and starring Harshvardhan Rane and Sonam Bajwa, explores the themes of love, passion, and betrayal. The film's formulaic plot and melodramatic nature have drawn mixed reviews, but it has been noted for its performances and music.",
+        shows: ["2025-10-01T09:30","2025-10-01T16:00","2025-10-01T21:30"],
+        cast: [
+           { name: "Harshvardhan Rane", img: "https://in.bmscdn.com/iedb/artist/images/website/poster/large/harshvardhan-rane-31964-24-03-2017-17-46-18.jpg" },
+           { name: "Sonam Bajwa", img: "https://in.bmscdn.com/iedb/artist/images/website/poster/large/sonam-bajwa-40182-13-06-2019-02-40-40.jpg" }
+         ]
+      },
+      {
+        id: 20,
+        title: "Tunnel ",
+        genre: "Action, Suspense, Thriller",
+        runtime: "2h 8m",
+        date: "2025-09-19",
+        poster: "https://assets-in.bmscdn.com/iedb/movies/images/mobile/thumbnail/xlarge/tunnel-et00461564-1757313193.jpg",
+        synopsis: "Fuelled by a lifetime of suffering, an ex army man embarks on a vengeful quest. Standing in his way is a police constable whose own past pain transformed into a dutiful son. When their paths converge, hero either can flee for his life or take a stand against the villain`s scheme of things.",
+        shows: ["2025-10-01T09:30","2025-10-01T16:00","2025-10-01T21:30"],
+        cast: [
+           { name: "Atharvaa Murali", img: "https://in.bmscdn.com/iedb/artist/images/website/poster/large/atharvaa-murali-28524-06-12-2017-01-13-48.jpg" },
+           { name: "Ashwin Kakumanu", img: "https://in.bmscdn.com/iedb/artist/images/website/poster/large/ashwin-kakumanu-40068-1757066649.jpg" },
+           { name: "Lavanya Tripathi", img: "https://in.bmscdn.com/iedb/artist/images/website/poster/large/lavanya-tripathi-30846-1757066711.jpg" },
+           { name: "Lakshmi Priya", img: "https://in.bmscdn.com/iedb/artist/images/website/poster/large/lakshmi-priya-1070733-1754452147.jpg" }
+         ]
+      },
+      {
+        id: 21,
+        title: "Mirage",
+        genre: "Mystery, Thiller",
+        runtime: "2h 32m",
+        date: "2025-09-19",
+        poster: "https://assets-in.bmscdn.com/iedb/movies/images/mobile/thumbnail/xlarge/mirage-et00462575-1757916948.jpg",
+        synopsis: "In a relentless quest for the truth, Abhirami searches for her fiance, Kiran, who has mysteriously disappeared. She teams up with investigative journalist Aswin, but their pursuit of answers uncovers a complex web of secrets and questions, drawing them deeper into a mystery far greater than they ever imagined.",
+        shows: ["2025-10-01T09:30","2025-10-01T16:00","2025-10-01T21:30"],
+        cast: [
+           { name: "Asif Ali", img: "https://in.bmscdn.com/iedb/artist/images/website/poster/large/asif-ali-13839-1658319936.jpg" },
+           { name: "Aparna Balamurali", img: "https://in.bmscdn.com/iedb/artist/images/website/poster/large/aparna-balamurali-1064392-1671107921.jpg" },
+           { name: "Hakkim Shah", img: "https://in.bmscdn.com/iedb/artist/images/website/poster/large/hakkim-shah-2016385-1669624630.jpg" },
+           { name: "Hannah Reji", img: "https://in.bmscdn.com/iedb/artist/images/website/poster/large/hannah-reji-1079690-1667217271.jpg" },
+           { name: "Sampath Raj", img: "https://in.bmscdn.com/iedb/artist/images/website/poster/large/sampath-raj-15429-24-03-2017-17-54-51.jpg" }
+         ]
+      },
+      {
+        id: 22,
+        title: "Mithra Mandali",
+        genre: "Comedy",
+        runtime: "2h 18m",
+        date: "2025-10-16",
+        poster: "https://assets-in.bmscdn.com/iedb/movies/images/mobile/thumbnail/xlarge/mithra-mandali-et00451889-1751443532.jpg",
+        synopsis: "A gang of good-for-nothing friends get caught in a hilarious mess between a fiery politician and his rebellious daughter, thanks to love and sheer stupidity.",
+        shows: ["2025-10-01T09:30","2025-10-01T16:00","2025-10-01T21:30"],
+        cast: [
+           { name: "Priyadarshi Pulikonda", img: "https://in.bmscdn.com/iedb/artist/images/website/poster/large/priyadarshi-pulikonda-1072555-24-03-2017-13-16-40.jpg" },
+           { name: "Niharika NM", img: "https://imageio.forbes.com/specials-images/imageserve/62801bcb1aa68688e461069e/0x0.jpg?format=jpg&crop=1791,1792,x24,y10,safe&height=416&width=416&fit=bounds" },
+           { name: "Vishnu Oi", img: "https://in.bmscdn.com/iedb/artist/images/website/poster/large/vishnu-oi-2014737-13-10-2021-02-06-56.jpg" },
+           { name: "Vennela Kishore", img: "https://in.bmscdn.com/iedb/artist/images/website/poster/large/vennela-kishore-16481-1659598641.jpg" },
+           { name: "Sathya", img: "https://in.bmscdn.com/iedb/artist/images/website/poster/large/sathya-9723-1725244049.jpg" }
+         ]
+      },
+
+
+
+
+      
+
+
+
+    ];
+    const THEATRES = {
+      "Mumbai": ["PVR Icon Phoenix palladium Lower Parel Mumbai", "INOX Megaplex", "Cinepolis ", "INOX:Megaplex, Inorbit Mall Malad", "INOX R-City Ghatkopar"],
+      "Delhi": ["PVR Select Citywalk", "INOX coca cola paras nehru place", "inox vishal mall rajouri garden", "pvr superplex logix noida","pvr Superplex Vegas Mall", "pvr imax with laser priya delhi"],
+      "Bangalore": ["PVR nexus (formerly forum) koramangala", "INOX Garuda Mall", "Cinepolis Royal Meenakshi", "pvr vr bengaluru whitefield", "inox megaplex mall of asia bangalore"],
+      "Hyderabad": ["pvr central mall panjagutta hyderabad", "Asian GPR", "AMB Cinemas", "Prasads IMAX","asian rajyalaxmi uppal", "AAA cinemas ameerpet", "sudarshan theatre 35MM", "sandhya 70mm", "sandhya 35mm"],
+      "Chennai": ["PVR Palazzo-the nexus vijaya mall", "PVR:Sathyam Royapettah", "AGS CinemasT Nagar", "AGS Cinemas villivakkam", "Mayajaal Multiplex","inox luxe phoenix market city velachery"],
+      "Kolkata": ["PVR South City", "INOX Forum Mall", "Cinepolis Lake Mall", "Priya Cinema","inox south city","svf cinemas"],
+      "Pune": ["PVR Pavilion", "INOX Bund Garden", "Cinepolis Seasons Mall", "City Pride", "abhiruchi city pride" , "vishal cinemas"],
+      "Ahmedabad": ["PVR Acropolis", "INOX Reliance Mega Mall", "Cinepolis Alpha One", "Rajhans Cinemas" , "mango plus cinemas" , "mukta a2 cinemas", "NY cinemas swagat mall"],
+      "Jaipur": ["Raj Mandir Cinema", "PVR Crystal Palm", "INOX GT Central", "Gold Cinema", "dd cinemas vivacity mall jaipur", "funstar jaipur", "paras cinema amer road"],
+      "Lucknow": ["PVR Phoenix United", "Wave Cinemas", "INOX Riverside Mall", "Fun Cinemas", "moviemax shalimar gateway", "vin palace multiplex dolby atmos vikas nagar", "antas dd cinema"],
+      "warangal": ["PVR: warangal maddox mall", "asian sridevi mall ", "asian gemini", "asian ashoka air conditioned hanumakonda", "venkatrama theatre warangal", "sambhavi theatre", "amrutha theatres", "ram 70mm 4k barco and laxman 35mm 2k warangal"],
+      "karimnagar": ["asian mukta a2 srinivasa", "asian paradise cinemas", "mamatha cinemas 4k dolby atmos", "prathima multiplex", "bharat talkies", "venkateshwara theatre"]
+    };
+
+
+    const PRICING = { 
+      standard: 200, 
+      premium: 350, 
+      deluxe: 500 
+    };
+
+    let state = {
+      user: { name: '', email: '', phone: '' },
+      location: '',
+      theatre: '',
+      selectedMovie: null,
+      selectedShow: null,
+      ticketType: 'standard',
+      selectedSeats: [],
+      bookings: [],
+      filteredMovies: MOVIES
+    };
+
+    // --- DOM Elements ---
+    const profileTrigger = document.getElementById('profileTrigger');
+    const profileDropdown = document.getElementById('profileDropdown');
+    const profileForm = document.getElementById('profileForm');
+    const profileAvatar = document.getElementById('profileAvatar');
+    const profileName = document.getElementById('profileName');
+    const profileDropdownName = document.getElementById('profileDropdownName');
+    const profileDropdownEmail = document.getElementById('profileDropdownEmail');
+    const locationSelect = document.getElementById('locationSelect');
+    const theatreSelect = document.getElementById('theatreSelect');
+    const searchInput = document.getElementById('searchInput');
+    const moviesGrid = document.getElementById('moviesGrid');
+    const noResults = document.getElementById('noResults');
+    const movieModal = document.getElementById('movieModal');
+    const closeModal = document.getElementById('closeModal');
+    const modalTitle = document.getElementById('modalTitle');
+    const modalPoster = document.getElementById('modalPoster');
+    const modalGenre = document.getElementById('modalGenre');
+    const modalSynopsis = document.getElementById('modalSynopsis');
+    const modalCast = document.getElementById('modalCast');
+    const showtimeSelect = document.getElementById('showtimeSelect');
+    const ticketTypeSelect = document.getElementById('ticketTypeSelect');
+    const seatGrid = document.getElementById('seatGrid');
+    const seatNote = document.getElementById('seatNote');
+    const totalAmount = document.getElementById('totalAmount');
+    const proceedPayment = document.getElementById('proceedPayment');
+    const paymentModal = document.getElementById('paymentModal');
+    const closePayment = document.getElementById('closePayment');
+    const payAmount = document.getElementById('payAmount');
+    const paymentMethod = document.getElementById('paymentMethod');
+    const upiForm = document.getElementById('upiForm');
+    const netbankingForm = document.getElementById('netbankingForm');
+    const cardForm = document.getElementById('cardForm');
+    const confirmPayment = document.getElementById('confirmPayment');
+    const cancelPayment = document.getElementById('cancelPayment');
+    const historyList = document.getElementById('historyList');
+    const sortHistory = document.getElementById('sortHistory');
+    const filterType = document.getElementById('filterType');
+    const filterStatus = document.getElementById('filterStatus');
+    const spinner = document.getElementById('spinner');
+    
+    // NEW: Auth Page Elements
+    const loginPage = document.getElementById('loginPage');
+    const registerPage = document.getElementById('registerPage');
+    const appPage = document.getElementById('appPage');
+    const showRegister = document.getElementById('showRegister');
+    const showLogin = document.getElementById('showLogin');
+    const registerForm = document.getElementById('registerForm');
+
+    // NEW: UX Improvement Elements
+    const step1 = document.getElementById('step1');
+    const step2 = document.getElementById('step2');
+    const step3 = document.getElementById('step3');
+    const movieGridOverlay = document.getElementById('movieGridOverlay');
+
+
+    // Alert Modal Elements
+    const alertModal = document.getElementById('alertModal');
+    const alertModalHeader = document.getElementById('alertModalHeader');
+    const alertTitle = document.getElementById('alertTitle');
+    const alertMessage = document.getElementById('alertMessage');
+    const alertOkBtn = document.getElementById('alertOkBtn');
+    const alertConfirmBtn = document.getElementById('alertConfirmBtn');
+    const alertConfirmDangerBtn = document.getElementById('alertConfirmDangerBtn');
+    const alertCancelBtn = document.getElementById('alertCancelBtn');
+    
+    // --- Utility Functions ---
+
+    function showSpinner() {
+      spinner.classList.add('show');
+    }
+    
+    function hideSpinner() {
+      spinner.classList.remove('show');
+    }
+    
+    let alertResolve = null;
+
+    /**
+     * Shows a custom alert modal.
+     * @param {string} message - The message to display.
+     * @param {string} title - The title of the modal.
+     * @param {string} type - 'info', 'success', 'warning', 'danger'
+     */
+    function showAlert(message, title = 'Notification', type = 'info') {
+      alertTitle.textContent = title;
+      alertMessage.innerHTML = message; // Use innerHTML to allow line breaks
+      
+      alertModalHeader.className = 'modal-header'; // Reset classes
+      if (type === 'success') {
+        alertModalHeader.classList.add('modal-header-success');
+      } else if (type === 'warning') {
+        alertModalHeader.classList.add('modal-header-warning');
+      } else if (type === 'danger') {
+        alertModalHeader.classList.add('modal-header-danger');
+      }
+      
+      alertOkBtn.style.display = 'block';
+      alertConfirmBtn.style.display = 'none';
+      alertConfirmDangerBtn.style.display = 'none';
+      alertCancelBtn.style.display = 'none';
+      
+      alertModal.classList.add('show');
+      
+      if (alertResolve) {
+        alertResolve = null;
+      }
+      
+      return new Promise((resolve) => {
+        alertResolve = resolve;
+      });
+    }
+    
+    /**
+     * Shows a custom confirm modal.
+     * @param {string} message - The message to display.
+     * @param {string} title - The title of the modal.
+     * @param {boolean} isDanger - If the confirm action is destructive.
+     * @returns {Promise<boolean>} - Resolves with true if confirmed, false if cancelled.
+     */
+    function showConfirm(message, title = 'Confirm Action', isDanger = false) {
+      alertTitle.textContent = title;
+      alertMessage.innerHTML = message;
+      
+      alertModalHeader.className = 'modal-header';
+      if (isDanger) {
+        alertModalHeader.classList.add('modal-header-danger');
+        alertConfirmDangerBtn.style.display = 'block';
+        alertConfirmBtn.style.display = 'none';
+      } else {
+        alertConfirmBtn.style.display = 'block';
+        alertConfirmDangerBtn.style.display = 'none';
+      }
+      
+      alertOkBtn.style.display = 'none';
+      alertCancelBtn.style.display = 'block';
+      
+      alertModal.classList.add('show');
+      
+      if (alertResolve) {
+        alertResolve = null;
+      }
+      
+      return new Promise((resolve) => {
+        alertResolve = resolve;
+      });
+    }
+    
+    function closeAlertModal() {
+      alertModal.classList.remove('show');
+      if (alertResolve) {
+        alertResolve(false); // Default to false if just closed
+        alertResolve = null;
+      }
+    }
+    
+    alertOkBtn.addEventListener('click', () => {
+        alertModal.classList.remove('show');
+        if (alertResolve) {
+            alertResolve(true); // OK counts as 'true'
+            alertResolve = null;
+        }
+    });
+
+    alertCancelBtn.addEventListener('click', () => {
+        alertModal.classList.remove('show');
+        if (alertResolve) {
+            alertResolve(false);
+            alertResolve = null;
+        }
+    });
+
+    alertConfirmBtn.addEventListener('click', () => {
+        alertModal.classList.remove('show');
+        if (alertResolve) {
+            alertResolve(true);
+            alertResolve = null;
+        }
+    });
+    
+    alertConfirmDangerBtn.addEventListener('click', () => {
+        alertModal.classList.remove('show');
+        if (alertResolve) {
+            alertResolve(true);
+            alertResolve = null;
+        }
+    });
+
+    // NEW: Auth Page Toggles
+    showRegister.addEventListener('click', (e) => {
+      e.preventDefault();
+      loginPage.style.display = 'none';
+      registerPage.style.display = 'flex';
+    });
+    
+    showLogin.addEventListener('click', (e) => {
+      e.preventDefault();
+      registerPage.style.display = 'none';
+      loginPage.style.display = 'flex';
+    });
+
+
+    // --- App Logic & Event Listeners ---
+
+    document.querySelectorAll('.tab').forEach(tab => {
+      tab.addEventListener('click', () => {
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        tab.classList.add('active');
+        
+        const tabName = tab.dataset.tab;
+        document.getElementById('moviesTab').style.display = tabName === 'movies' ? 'block' : 'none';
+        document.getElementById('historyTab').style.display = tabName === 'history' ? 'block' : 'none';
+        document.getElementById('profileTab').style.display = tabName === 'profile' ? 'block' : 'none';
+        
+        if (tabName === 'history') {
+          renderHistory();
+        }
+        if (tabName === 'profile') {
+          prefillProfileForm();
+        }
+      });
+    });
+
+    profileTrigger.addEventListener('click', () => {
+      profileDropdown.classList.toggle('show');
+    });
+
+    document.addEventListener('click', (e) => {
+      if (!profileTrigger.contains(e.target) && !profileDropdown.contains(e.target)) {
+        profileDropdown.classList.remove('show');
+      }
+    });
+
+    profileForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      state.user.name = document.getElementById('userName').value;
+      state.user.email = document.getElementById('userEmail').value;
+      state.user.phone = document.getElementById('userPhone').value;
+      
+      if(!state.user.name) {
+          showAlert('Please enter your name.', 'Missing Info', 'warning');
+          return;
+      }
+      
+      profileAvatar.textContent = state.user.name.charAt(0).toUpperCase();
+      profileName.textContent = state.user.name;
+      profileDropdownName.textContent = state.user.name;
+      profileDropdownEmail.textContent = state.user.email;
+      profileDropdown.classList.remove('show');
+      
+      showAlert('Profile saved successfully!', 'Success', 'success');
+    });
+
+    // NEW: Register Form Logic
+    registerForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const name = document.getElementById('registerName').value;
+      const email = document.getElementById('registerEmail').value;
+      const password = document.getElementById('registerPassword').value;
+      const confirmPassword = document.getElementById('registerConfirmPassword').value;
+
+      if (!name || !email || !password || !confirmPassword) {
+        showAlert('Please fill in all fields.', 'Missing Information', 'warning');
+        return;
+      }
+
+      if (password !== confirmPassword) {
+        showAlert('Passwords do not match. Please try again.', 'Password Error', 'danger');
+        return;
+      }
+
+      // Simulate successful registration and login
+      registerPage.style.display = 'none';
+      appPage.style.display = 'block';
+
+      state.user = { name: name, email: email, phone: '' }; // phone can be added in profile
+      profileName.textContent = name;
+      profileAvatar.textContent = name.charAt(0).toUpperCase();
+      profileDropdownName.textContent = name;
+      profileDropdownEmail.textContent = email;
+      prefillProfileForm();
+
+      // Show welcome alert
+      showOnboardingAlert(false); // false = not a guest
+    });
+
+    // --- UPDATED: Location/Theatre Selection Logic ---
+    
+    function updateSelectionGuide() {
+      // Step 1: Location
+      if (state.location) {
+        step1.classList.add('completed');
+        step2.classList.add('active');
+      } else {
+        step1.classList.remove('completed');
+        step1.classList.add('active');
+        step2.classList.remove('active', 'completed');
+        step3.classList.remove('active');
+      }
+      
+      // Step 2: Theatre
+      if (state.theatre) {
+        step2.classList.add('completed');
+        step3.classList.add('active');
+        movieGridOverlay.classList.add('hidden'); // Show movies
+      } else {
+        step2.classList.remove('completed');
+        step3.classList.remove('active');
+        movieGridOverlay.classList.remove('hidden'); // Hide movies
+      }
+    }
+    
+    locationSelect.addEventListener('change', (e) => {
+      state.location = e.target.value;
+      state.theatre = ''; // Reset theatre
+      
+      if (state.location && THEATRES[state.location]) {
+        theatreSelect.disabled = false;
+        theatreSelect.innerHTML = '<option value="">Select Theatre</option>';
+        THEATRES[state.location].forEach(t => {
+          const opt = document.createElement('option');
+          opt.value = t;
+          opt.textContent = t;
+          theatreSelect.appendChild(opt);
+        });
+      } else {
+        theatreSelect.disabled = true;
+        theatreSelect.innerHTML = '<option value="">Select Theatre</option>';
+      }
+      
+      theatreSelect.value = '';
+      updateSelectionGuide();
+    });
+    
+    theatreSelect.addEventListener('change', (e) => {
+      state.theatre = e.target.value;
+      updateSelectionGuide();
+    });
+
+    function prefillProfileForm() {
+      document.getElementById('userName').value = state.user.name || '';
+      document.getElementById('userEmail').value = state.user.email || '';
+      document.getElementById('userPhone').value = state.user.phone || '';
+    }
+
+    searchInput.addEventListener('input', (e) => {
+      const query = e.target.value.toLowerCase().trim();
+      if (!query) {
+        state.filteredMovies = MOVIES;
+      } else {
+        state.filteredMovies = MOVIES.filter(m => 
+          m.title.toLowerCase().includes(query) ||
+          m.genre.toLowerCase().includes(query) ||
+          m.cast.some(c => c.name.toLowerCase().includes(query))
+        );
+      }
+      renderMovies();
+    });
+
+    function renderMovies() {
+      moviesGrid.innerHTML = '';
+      if (state.filteredMovies.length === 0) {
+        noResults.style.display = 'block';
+        return;
+      }
+      noResults.style.display = 'none';
+      
+      state.filteredMovies.forEach(movie => {
+        const card = document.createElement('div');
+        card.className = 'movie-card';
+        card.innerHTML = `
+          <div class="movie-poster" style="background-image: url('${movie.poster}')" onerror="this.style.backgroundImage='url(https://placehold.co/400x600/1a1f2e/9aa4b2?text=No+Poster)'"></div>
+          <div class="movie-info">
+            <div class="movie-title">${movie.title}</div>
+            <div class="movie-meta">${movie.genre} • ${movie.runtime}</div>
+            <button class="btn btn-small" style="width: 100%;">Book Now</button>
+          </div>
+        `;
+        // UPDATED: Check for location/theatre is now handled by the overlay
+        // The click listener is simplified
+        card.addEventListener('click', () => openMovieModal(movie));
+        moviesGrid.appendChild(card);
+      });
+    }
+
+    function openMovieModal(movie) {
+      // This check is now redundant thanks to the overlay, but good as a fallback.
+      if (!state.location || !state.theatre) {
+        showAlert('Please select a location and theatre first.', 'Missing Info', 'warning');
+        return;
+      }
+
+      state.selectedMovie = movie;
+      state.selectedShow = movie.shows[0];
+      state.selectedSeats = [];
+      
+      modalTitle.textContent = movie.title;
+      modalPoster.style.backgroundImage = `url('${movie.poster}')`;
+      modalGenre.textContent = `${movie.genre} • ${movie.runtime} • ${state.theatre}`;
+      modalSynopsis.textContent = movie.synopsis;
+      
+      modalCast.innerHTML = '';
+      movie.cast.forEach(c => {
+        const member = document.createElement('div');
+        member.className = 'cast-member';
+        // Added placeholder fallback for cast images
+        member.innerHTML = `<img src="${c.img}" alt="${c.name}" onerror="this.src='https://placehold.co/100x120/1a1f2e/9aa4b2?text=No+Image'"><div style="font-size: 12px; margin-top: 8px;">${c.name}</div>`;
+        modalCast.appendChild(member);
+      });
+      
+      showtimeSelect.innerHTML = '';
+      movie.shows.forEach(s => {
+        const opt = document.createElement('option');
+        opt.value = s;
+        // Format date/time to be more readable
+        opt.textContent = new Date(s).toLocaleString('en-US', { 
+          weekday: 'short', 
+          month: 'short', 
+          day: 'numeric', 
+          hour: 'numeric', 
+          minute: 'numeric', 
+          hour12: true 
+        });
+        showtimeSelect.appendChild(opt);
+      });
+      
+      // Set default ticket type
+      ticketTypeSelect.value = 'standard';
+      state.ticketType = 'standard';
+
+      renderSeats();
+      updateTotal();
+      movieModal.classList.add('show');
+    }
+
+    function getBookedSeats() {
+      // Simple simulation of booked seats.
+      // In a real app, this would be per movie/show/theatre.
+      const key = `${state.selectedMovie.id}_${state.selectedShow}_${state.theatre}`;
+      let booked = [];
+      
+      // Check our own bookings
+      state.bookings.forEach(b => {
+        if (b.key === key && b.status === 'active') {
+          booked = booked.concat(b.seats);
+        }
+      });
+      
+      // Add some random "other user" booked seats for demo
+      const randomBooked = ['A3', 'A4', 'B5', 'C10', 'D1', 'D2', 'F8', 'G5', 'G6'];
+      booked = booked.concat(randomBooked);
+      
+      return [...new Set(booked)]; // Return unique seats
+    }
+
+    function toggleSeat(seatLabel, seatElement) {
+      if (seatElement.classList.contains('booked')) return;
+
+      const index = state.selectedSeats.indexOf(seatLabel);
+      if (index > -1) {
+        state.selectedSeats.splice(index, 1);
+        seatElement.classList.remove('selected');
+      } else {
+        state.selectedSeats.push(seatLabel);
+        seatElement.classList.add('selected');
+      }
+      
+      updateTotal();
+      updateSeatNote();
+    }
+    
+    function updateSeatNote() {
+       if (state.selectedSeats.length > 0) {
+         seatNote.textContent = `Selected Seats: ${state.selectedSeats.join(', ')}`;
+       } else {
+         seatNote.textContent = 'Click on any available seat to select it.';
+       }
+    }
+
+    function renderSeats() {
+      seatGrid.innerHTML = '';
+      const rows = 8, cols = 14;
+      const bookedSeats = getBookedSeats();
+      
+      for (let r = 0; r < rows; r++) {
+        for (let c = 1; c <= cols; c++) {
+          const seatLabel = String.fromCharCode(65 + r) + c;
+          const seat = document.createElement('div');
+          seat.className = 'seat';
+          seat.textContent = seatLabel;
+          seat.setAttribute('aria-label', `Seat ${seatLabel}`);
+          
+          if (bookedSeats.includes(seatLabel)) {
+            seat.classList.add('booked');
+            seat.setAttribute('aria-disabled', 'true');
+          } else {
+             if (state.selectedSeats.includes(seatLabel)) {
+                seat.classList.add('selected');
+             }
+            seat.addEventListener('click', () => toggleSeat(seatLabel, seat));
+          }
+          
+          seatGrid.appendChild(seat);
+        }
+      }
+      updateSeatNote();
+    }
+    
+    function updateTotal() {
+      const price = PRICING[state.ticketType] || 0;
+      const total = price * state.selectedSeats.length;
+      totalAmount.textContent = `₹${total}`;
+      
+      proceedPayment.disabled = total === 0;
+    }
+
+    showtimeSelect.addEventListener('change', () => {
+       state.selectedShow = showtimeSelect.value;
+       state.selectedSeats = []; // Clear seats on showtime change
+       renderSeats();
+       updateTotal();
+    });
+
+    ticketTypeSelect.addEventListener('change', () => {
+      state.ticketType = ticketTypeSelect.value;
+      updateTotal();
+    });
+
+    proceedPayment.addEventListener('click', () => {
+      if (state.selectedSeats.length === 0) {
+        showAlert('Please select at least one seat.', 'No Seats Selected', 'warning');
+        return;
+      }
+      
+      if (!state.user.name || !state.user.email || !state.user.phone || state.user.name === 'Guest User') {
+        showAlert('Please complete your profile before booking.', 'Profile Incomplete', 'warning');
+        // Switch to profile tab
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        document.querySelector('.tab[data-tab="profile"]').classList.add('active');
+        document.getElementById('moviesTab').style.display = 'none';
+        document.getElementById('historyTab').style.display = 'none';
+        document.getElementById('profileTab').style.display = 'block';
+        prefillProfileForm();
+        document.getElementById('userName').focus();
+        movieModal.classList.remove('show'); // Close movie modal
+        return;
+      }
+      
+      const price = PRICING[ticketTypeSelect.value] * state.selectedSeats.length;
+      payAmount.textContent = `₹${price}`;
+      paymentModal.classList.add('show');
+    });
+
+    paymentMethod.addEventListener('change', (e) => {
+      upiForm.style.display = e.target.value === 'upi' ? 'block' : 'none';
+      netbankingForm.style.display = e.target.value === 'netbanking' ? 'block' : 'none';
+      cardForm.style.display = e.target.value === 'card' ? 'block' : 'none';
+    });
+
+    confirmPayment.addEventListener('click', () => {
+      if (!paymentMethod.value) {
+        showAlert('Please select a payment method.', 'Payment Error', 'warning');
+        return;
+      }
+
+      showSpinner();
+      
+      // Simulate payment processing
+      setTimeout(() => {
+        const booking = {
+          id: Date.now(),
+          key: `${state.selectedMovie.id}_${state.selectedShow}_${state.theatre}`,
+          movieId: state.selectedMovie.id,
+          title: state.selectedMovie.title,
+          poster: state.selectedMovie.poster,
+          location: state.location,
+          theatre: state.theatre,
+          showtime: state.selectedShow,
+          ticketType: ticketTypeSelect.value,
+          seats: [...state.selectedSeats],
+          price: PRICING[ticketTypeSelect.value] * state.selectedSeats.length,
+          paymentMethod: paymentMethod.value,
+          userName: state.user.name,
+          userEmail: state.user.email,
+          userPhone: state.user.phone,
+          bookingDate: new Date().toISOString(),
+          status: 'active'
+        };
+
+        state.bookings.push(booking);
+        
+        hideSpinner();
+        paymentModal.classList.remove('show');
+        movieModal.classList.remove('show');
+        
+        showAlert(
+          `<strong>Booking ID: ${booking.id}</strong><br>
+           Movie: ${booking.title}<br>
+           Seats: ${booking.seats.join(', ')}<br>
+           Amount: ₹${booking.price}`,
+          '✅ Booking Confirmed!',
+          'success'
+        );
+        
+        // Reset state
+        state.selectedSeats = [];
+        paymentMethod.value = '';
+        upiForm.style.display = 'none';
+        netbankingForm.style.display = 'none';
+        cardForm.style.display = 'none';
+      }, 1500); // 1.5 second delay
+    });
+
+    function renderHistory() {
+      let bookings = [...state.bookings];
+      
+      const statusFilter = filterStatus.value;
+      if (statusFilter !== 'all') {
+        bookings = bookings.filter(b => b.status === statusFilter);
+      }
+      
+      const typeFilter = filterType.value;
+      if (typeFilter !== 'all') {
+        bookings = bookings.filter(b => b.ticketType === typeFilter);
+      }
+      
+      const sortOrder = sortHistory.value;
+      bookings.sort((a, b) => {
+        const dateA = new Date(a.bookingDate);
+        const dateB = new Date(b.bookingDate);
+        return sortOrder === 'newest' ? dateB - dateA : dateA - dateB;
+      });
+      
+      historyList.innerHTML = '';
+      
+      if (bookings.length === 0) {
+        historyList.innerHTML = '<div class="empty-state"><p>No bookings found</p></div>';
+        return;
+      }
+      
+      bookings.forEach(booking => {
+        const item = document.createElement('div');
+        item.className = 'booking-item';
+        item.innerHTML = `
+          <div class="booking-info">
+            <div class="booking-title">${booking.title}</div>
+            <div class="booking-details">
+              📍 ${booking.theatre}, ${booking.location}<br>
+              🕐 ${new Date(booking.showtime).toLocaleString()}<br>
+              🎟️ ${booking.ticketType.toUpperCase()} • Seats: ${booking.seats.join(', ')}<br>
+              👤 ${booking.userName} • ${booking.userEmail}<br>
+              📅 Booked on: ${new Date(booking.bookingDate).toLocaleDateString()}
+            </div>
+          </div>
+          <div class="booking-actions">
+            <div class="booking-price">₹${booking.price}</div>
+            <span class="booking-status ${booking.status === 'active' ? 'status-active' : 'status-cancelled'}">
+              ${booking.status}
+            </span>
+            ${booking.status === 'active' ? `
+              <button class="btn btn-danger btn-small" onclick="window.cancelBooking(${booking.id})" title="Cancel this ticket (permanent)">
+                Cancel Ticket
+              </button>
+            ` : ''}
+          </div>
+        `;
+        historyList.appendChild(item);
+      });
+    }
+
+    window.cancelBooking = async function(bookingId) {
+      try {
+        console.log('=== CANCEL BOOKING START ===');
+        console.log('Booking ID:', bookingId);
+        
+        const bookingIndex = state.bookings.findIndex(b => b.id === bookingId);
+        console.log('Booking index found:', bookingIndex);
+        
+        if (bookingIndex === -1) {
+          console.error('Booking not found!');
+          showAlert('Error: Booking not found!', 'Error', 'danger');
+          return;
+        }
+        
+        const booking = state.bookings[bookingIndex];
+        console.log('Found booking:', booking);
+        
+        if (booking.status === 'cancelled') {
+          console.log('Booking already cancelled');
+          showAlert('This booking is already cancelled!', 'Warning', 'warning');
+          return;
+        }
+        
+        const userConfirmed = await showConfirm(
+          `Are you sure you want to cancel this ticket?<br><br>
+           Movie: ${booking.title}<br>
+           Seats: ${booking.seats.join(', ')}<br>
+           Amount: ₹${booking.price}`,
+          'Confirm Cancellation',
+          true // isDanger = true
+        );
+        
+        console.log('User confirmation:', userConfirmed);
+        
+        if (!userConfirmed) {
+          console.log('User cancelled the operation');
+          return;
+        }
+        
+        state.bookings[bookingIndex].status = 'cancelled';
+        state.bookings[bookingIndex].cancelledDate = new Date().toISOString();
+        
+        console.log('Updated booking:', state.bookings[bookingIndex]);
+        
+        renderHistory();
+        
+        showAlert(
+          `Booking ID: ${booking.id}<br>
+           Movie: ${booking.title}<br>
+           Refund: ₹${booking.price}<br><br>
+           Your refund will be processed within 5-7 business days.`,
+          '✅ Ticket Cancelled',
+          'success'
+        );
+        
+        console.log('=== CANCEL BOOKING COMPLETE ===');
+      } catch (error) {
+        console.error('Error in cancelBooking:', error);
+        showAlert('An error occurred while cancelling the ticket. Please try again.', 'Error', 'danger');
+      }
+    };
+
+    sortHistory.addEventListener('change', renderHistory);
+    filterType.addEventListener('change', renderHistory);
+    filterStatus.addEventListener('change', renderHistory);
+
+    closeModal.addEventListener('click', () => movieModal.classList.remove('show'));
+    closePayment.addEventListener('click', () => paymentModal.classList.remove('show'));
+    cancelPayment.addEventListener('click', () => paymentModal.classList.remove('show'));
+
+    document.getElementById('logoutBtn').addEventListener('click', async () => {
+      const confirmed = await showConfirm('Are you sure you want to logout?', 'Confirm Logout', true);
+      
+      if (confirmed) {
+        state.user = { name: '', email: '', phone: '' };
+        state.bookings = [];
+        profileAvatar.textContent = 'U';
+        profileName.textContent = 'Profile';
+        profileDropdownName.textContent = 'Profile';
+        profileDropdownEmail.textContent = 'Your Email';
+        profileDropdown.classList.remove('show');
+        document.getElementById('userName').value = '';
+        document.getElementById('userEmail').value = '';
+        document.getElementById('userPhone').value = '';
+        document.getElementById('appPage').style.display = 'none';
+        document.getElementById('loginPage').style.display = 'flex';
+        document.getElementById('registerPage').style.display = 'none';
+        
+        // Reset steps guide and overlay
+        locationSelect.value = '';
+        theatreSelect.value = '';
+        theatreSelect.disabled = true;
+        state.location = '';
+        state.theatre = '';
+        updateSelectionGuide();
+        
+        showAlert('You have been logged out successfully.', 'Logged Out', 'success');
+      }
+    });
+    
+    // NEW: Onboarding Alert
+    function showOnboardingAlert(isGuest = false) {
+      const guestMessage = "Please update your <strong>Profile</strong> for a faster checkout experience.";
+      const userMessage = `Welcome, ${state.user.name}!`;
+      
+      showAlert(
+        `<strong>${userMessage}</strong><br><br>
+         Here are a few tips to get started:<br>
+         <ul style="margin-top: 12px; margin-left: 20px; text-align: left; line-height: 1.8;">
+           <li>Follow the <strong>Booking Steps</strong> to select your location and theatre.</li>
+           <li>Browse your upcoming tickets in the <strong>Booking History</strong> tab.</li>
+           <li>${isGuest ? guestMessage : "You can manage your details in the <strong>Profile</strong> tab."}</li>
+         </ul>`,
+         '👋 Welcome to Just Now!',
+         'info'
+      );
+    }
+
+    // Login functionality
+    document.getElementById('loginForm').addEventListener('submit', (e) => {
+      e.preventDefault();
+      const email = document.getElementById('loginEmail').value;
+      const name = email.split('@')[0];
+      document.getElementById('loginPage').style.display = 'none';
+      document.getElementById('appPage').style.display = 'block';
+      
+      state.user = { name: name, email: email, phone: '' };
+      profileName.textContent = name;
+      profileAvatar.textContent = name.charAt(0).toUpperCase();
+      profileDropdownName.textContent = name;
+      profileDropdownEmail.textContent = email;
+      prefillProfileForm();
+      
+      showOnboardingAlert(false); // Show user onboarding
+    });
+
+    document.getElementById('guestBtn').addEventListener('click', () => {
+      document.getElementById('loginPage').style.display = 'none';
+      document.getElementById('appPage').style.display = 'block';
+      state.user = { name: 'Guest User', email: 'guest@justnow.com', phone: '' };
+      profileName.textContent = 'Guest User';
+      profileAvatar.textContent = 'G';
+      profileDropdownName.textContent = 'Guest User';
+      profileDropdownEmail.textContent = 'guest@justnow.com';
+      prefillProfileForm();
+      
+      showOnboardingAlert(true); // Show guest onboarding
+    });
+
+    // Initial Render
+    renderMovies();
+    updateSelectionGuide(); // Set initial state for steps and overlay
+  </script>
+  
+</body>
+</html>
+
